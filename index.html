@@ -15,9 +15,9 @@
             top: 20px;
             right: 20px;
             z-index: 1000;
-            background: none;    /* Sin fondo blanco */
+            background: none !important;
             max-width: 150px;
-            box-shadow: none;    /* Sin sombras */
+            box-shadow: none;
             border: none;
         }
 
@@ -38,9 +38,9 @@
 </head>
 <body>
 
-    <div class="logo-container"> 
+    <div class="logo-container">
         <img src="logo.png" alt="Acropolis Realty">
-    </div> 
+    </div>
 
     <div id="mi-mapa"></div>
 
@@ -49,28 +49,30 @@
         var map = L.map('mi-mapa').setView([10.9900, -74.7950], 14);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+        // --- LISTA DE INMUEBLES CORREGIDA ---
         const locales = [
             { 
                 nombre: "Local Universidad (Cra 53)", 
                 coords: [10.9927, -74.7936], 
-                foto: "https://acropolisinmo-dot.github.io/mapa-acropolis/Fotos/universidad.jpg" 
+                foto: "Fotos/universidad.jpg" 
             },
             { 
                 nombre: "Bodega Prado (Cra 54)", 
                 coords: [10.9968, -74.7961], 
-                foto: "https://acropolisinmo-dot.github.io/mapa-acropolis/Fotos/bodega.jpg" 
+                foto: "Fotos/bodega.jpg" 
             },
             { 
                 nombre: "Local Calle 30", 
                 coords: [10.9634, -74.8396], 
-                foto: "https://acropolisinmo-dot.github.io/mapa-acropolis/Fotos/pueblito.jpg" 
+                foto: "Fotos/pueblito.jpg" 
             },
             { 
                 nombre: "trupillo", 
                 coords: [10.958857722011313, -74.78469889980501], 
-                foto: "https://acropolisinmo-dot.github.io/mapa-acropolis/Fotos/trupillo.jpg" 
+                foto: "Fotos/trupillo.jpg" 
             }
         ];
+        // -----------------------------------------------------------
 
         locales.forEach(function(l) {
             L.marker(l.coords).addTo(map).bindPopup(`
@@ -84,5 +86,3 @@
     </script>
 </body>
 </html>
-
-
