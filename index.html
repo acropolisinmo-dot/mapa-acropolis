@@ -11,12 +11,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.css" />
 
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #f4f4f4; }
-        #mi-mapa { height: 100vh; width: 100%; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        #mi-mapa { height: 100vh; width: 100%; position: absolute; top: 0; bottom: 0; }
         
-        /* CONTENEDOR DE FILTROS */
         .filtros-wrapper {
-            position: absolute; top: 10px; left: 10px; z-index: 1000;
+            position: absolute; top: 10px; left: 10px; z-index: 1100;
             display: flex; flex-direction: column; gap: 8px;
         }
         .grupo-filtros {
@@ -27,13 +26,10 @@
         .filter-btn {
             background: white; border: 1.5px solid #ccc; padding: 6px 12px;
             border-radius: 20px; cursor: pointer; font-size: 11px; font-weight: bold;
-            transition: all 0.3s;
         }
-        /* Colores para filtros activos */
         .filter-btn.active.uso { background: #333; color: white; border-color: #333; }
         .filter-btn.active.negocio { background: #d32f2f; color: white; border-color: #d32f2f; }
 
-        /* POPUP Y GALERÍA */
         .popup-ficha { width: 220px; }
         .slider { width: 100%; height: 130px; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
         .slider img { width: 100%; height: 100%; object-fit: cover; }
@@ -45,52 +41,4 @@
         .arriendo { background: #2196F3; }
         .venta { background: #4CAF50; }
         
-        .price-tag { color: #d32f2f; font-weight: bold; font-size: 16px; margin: 3px 0; }
-        .btn-accion {
-            display: block; text-align: center; padding: 9px; margin-top: 6px;
-            text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px;
-        }
-        .btn-gmaps { background: #4285F4; color: white !important; }
-        .btn-wa { background: #25d366; color: white !important; }
-
-        .logo-bottom { position: absolute; bottom: 20px; right: 10px; z-index: 1000; max-width: 90px; }
-    </style>
-</head>
-<body>
-
-    <div class="filtros-wrapper">
-        <div class="grupo-filtros" id="filtro-uso">
-            <button class="filter-btn active uso" onclick="filtrar('todos', 'uso', this)">Todos</button>
-            <button class="filter-btn uso" onclick="filtrar('local', 'uso', this)">Locales</button>
-            <button class="filter-btn uso" onclick="filtrar('bodega', 'uso', this)">Bodegas</button>
-        </div>
-        <div class="grupo-filtros" id="filtro-negocio">
-            <button class="filter-btn active negocio" onclick="filtrar('todos', 'negocio', this)">Venta/Arriendo</button>
-            <button class="filter-btn negocio" onclick="filtrar('arriendo', 'negocio', this)">Arriendo</button>
-            <button class="filter-btn negocio" onclick="filtrar('venta', 'negocio', this)">Venta</button>
-        </div>
-    </div>
-
-    <div id="mi-mapa"></div>
-    <div class="logo-bottom"><img src="logo.png" style="width:100%"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script src="https://unpkg.com/leaflet-geosearch@3.11.0/dist/bundle.min.js"></script>
-
-    <script>
-        const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png');
-        const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
-
-        const map = L.map('mi-mapa', { center: [10.9750, -74.8100], zoom: 13, layers: [osm] });
-        L.control.layers({ "Mapa": osm, "Satélite": satelite }, null, { position: 'bottomleft' }).addTo(map);
-
-        // BUSCADOR
-        const search = new GeoSearch.GeoSearchControl({ provider: new GeoSearch.OpenStreetMapProvider(), style: 'bar', autoClose: true });
-        map.addControl(search);
-
-        // GEOLOCALIZACIÓN
-        map.locate({watch: true, setView: false});
-        let userMarker;
-        map.on('locationfound', (e) => {
-            if (!userMarker) userMarker = L.circleMarker(
+        .price-tag { color: #d32f2f; font-weight: bold;
