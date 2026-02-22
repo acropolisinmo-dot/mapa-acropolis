@@ -10,7 +10,7 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         #mi-mapa { height: 100vh; width: 100%; position: absolute; }
         
-        /* Filtros en la parte superior izquierda */
+        /* Filtros superiores */
         .filtros-wrapper {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
         }
@@ -22,15 +22,20 @@
         .filter-btn {
             background: white; border: 1px solid #ddd; padding: 8px 15px;
             border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: bold;
-            transition: 0.3s;
         }
         .active { background: #d32f2f; color: white; border-color: #d32f2f; }
+
+        /* AJUSTE PARA EL ZOOM EN CELULAR */
+        .leaflet-bottom.leaflet-right {
+            margin-bottom: 80px; /* Sube el zoom para que no lo tape la barra del celular */
+            margin-right: 10px;
+        }
 
         /* Estilo de la Ficha */
         .popup-ficha { width: 210px; text-align: center; }
         .popup-ficha img { width: 100%; border-radius: 8px; height: 130px; object-fit: cover; background: #eee; }
         .precio { color: #d32f2f; font-weight: bold; font-size: 17px; margin: 5px 0; display: block; }
-        .btn { display: block; padding: 10px; margin-top: 6px; border-radius: 6px; text-decoration: none; color: white !important; font-weight: bold; font-size: 13px; }
+        .btn { display: block; padding: 10px; margin-top: 6px; border-radius: 6px; text-decoration: none; color: white !important; font-weight: bold; font-size: 13px; text-align: center; }
     </style>
 </head>
 <body>
@@ -47,17 +52,14 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. Inicializar Mapa quitando el zoom por defecto
-        var map = L.map('mi-mapa', {
-            zoomControl: false // Quitamos el zoom de arriba
-        }).setView([10.9750, -74.8100], 13);
+        // Inicializar sin zoom por defecto
+        var map = L.map('mi-mapa', { zoomControl: false }).setView([10.9750, -74.8100], 13);
 
-        // 2. Añadir el zoom en la parte inferior derecha
+        // Añadir zoom en la esquina derecha pero el CSS lo subirá un poco
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Ruta de imágenes
         var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
 
         var locales = [
@@ -82,23 +84,3 @@
                             <span class="precio">$ ${l.precio}</span>
                             <div style="font-size:12px; color:#666; margin-bottom:5px">📏 Área: ${l.area}</div>
                             <a href="http://googleusercontent.com/maps.google.com/maps?daddr=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn" style="background:#4285F4">📍 Cómo llegar</a>
-                            <a href="https://wa.me/573243816458" target="_blank" class="btn" style="background:#25d366">💬 WhatsApp</a>
-                        </div>
-                    `);
-                    capaMarcadores.addLayer(marker);
-                }
-            });
-        }
-
-        function filtrar(val, btn) {
-            var hijos = btn.parentElement.querySelectorAll('.filter-btn');
-            hijos.forEach(function(h) { h.classList.remove('active'); });
-            btn.classList.add('active');
-            fUso = val;
-            dibujar();
-        }
-
-        dibujar();
-    </script>
-</body>
-</html>
