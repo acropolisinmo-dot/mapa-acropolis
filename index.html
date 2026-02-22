@@ -125,3 +125,52 @@
                             </div>
                             <div class="actions">
                                 <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
+                                <a href="https://wa.me/${l.wa}?text=Interés en: ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WA</a>
+                            </div>
+                            <button onclick="compartir(${l.id})" style="width:100%; margin-top:5px; border:none; background:#eee; padding:5px; border-radius:5px; font-size:10px; cursor:pointer">🔗 Copiar Enlace Directo</button>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        // 6. Función de Búsqueda Real
+        function buscar() {
+            var texto = document.getElementById('busqueda').value.toLowerCase();
+            var filtrados = locales.filter(l => 
+                l.nombre.toLowerCase().includes(texto) || 
+                l.broker.toLowerCase().includes(texto)
+            );
+            dibujar(filtrados);
+        }
+
+        // 8. Geolocalización en tiempo real
+        function miUbicacion() {
+            map.locate({setView: true, maxZoom: 16});
+        }
+        map.on('locationfound', function(e) {
+            L.circle(e.latlng, e.accuracy).addTo(map);
+            L.marker(e.latlng).addTo(map).bindPopup("Estás aquí").openPopup();
+        });
+
+        // 9. Compartir propiedad
+        window.compartir = function(id) {
+            var url = window.location.href.split('?')[0] + "?id=" + id;
+            navigator.clipboard.writeText(url);
+            alert("Enlace de la propiedad copiado!");
+        }
+
+        function filtrar(val, btn) {
+            document.querySelectorAll('.btn-f').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            fUso = val;
+            dibujar();
+        }
+
+        window.onload = function() {
+            dibujar();
+            setTimeout(() => map.invalidateSize(), 500);
+        }
+    </script>
+</body>
+</html>
