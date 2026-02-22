@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Acropolis Realty - Marketplace Profesional</title>
+    <title>Acropolis Realty - Marketplace</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #mi-mapa { height: 100%; width: 100%; position: absolute; top: 0; left: 0; }
 
         /* Interfaz Superior */
@@ -28,11 +28,11 @@
         .btn-f {
             background: white; border: none; padding: 10px 18px; border-radius: 25px;
             white-space: nowrap; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer; transition: 0.3s;
+            cursor: pointer; transition: 0.2s;
         }
         .active { background: #d32f2f !important; color: white !important; }
 
-        /* Botón Mi Ubicación */
+        /* Botón GPS */
         .gps-btn {
             position: absolute; bottom: 110px; right: 20px; z-index: 1000;
             background: white; width: 50px; height: 50px; border-radius: 50%;
@@ -40,11 +40,11 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-size: 22px; cursor: pointer;
         }
 
-        /* Ficha del Inmueble */
-        .popup-ficha { width: 230px; padding: 5px; }
-        .popup-ficha img { width: 100%; height: 130px; object-fit: cover; border-radius: 12px; margin-bottom: 8px; }
-        .broker-tag { font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; }
-        .precio { color: #d32f2f; font-weight: 800; font-size: 18px; display: block; margin: 4px 0; }
+        /* Ficha del Popup */
+        .popup-ficha { width: 230px; padding: 2px; }
+        .popup-ficha img { width: 100%; height: 135px; object-fit: cover; border-radius: 12px; margin-bottom: 8px; background: #eee; }
+        .broker-tag { font-size: 10px; color: #777; text-transform: uppercase; font-weight: bold; margin-bottom: 2px; }
+        .precio { color: #d32f2f; font-weight: 800; font-size: 19px; display: block; margin: 4px 0; }
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
         .btn-act {
             padding: 10px; text-align: center; border-radius: 8px;
@@ -57,66 +57,85 @@
     <div class="header-ui">
         <div class="search-bar">
             <span>🔍</span>
-            <input type="text" id="buscador" placeholder="Buscar barrio, local o broker..." onkeyup="filtrarMaestro()">
+            <input type="text" id="buscador" placeholder="Buscar por nombre, barrio o broker..." onkeyup="filtrarMaestro()">
         </div>
         <div class="filters">
             <button class="btn-f active" onclick="cambiarUso('todos', this)">Todos</button>
             <button class="btn-f" onclick="cambiarUso('local', this)">Locales</button>
             <button class="btn-f" onclick="cambiarUso('bodega', this)">Bodegas</button>
-            <button class="btn-f" onclick="cambiarUso('premium', this)">✨ Premium</button>
         </div>
     </div>
 
-    <div class="gps-btn" onclick="buscarMiUbicacion()" title="Mi ubicación">📍</div>
+    <div class="gps-btn" onclick="buscarMiUbicacion()">📍</div>
 
     <div id="mi-mapa"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Inicialización
         var map = L.map('mi-mapa', { zoomControl: false }).setView([10.9750, -74.8100], 13);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
+        // --- ENLACE PROPORCIONADO ---
+        var urlSheet = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTT50TzNyq67ZMuqWEtq4MI7q81QQS3RLLHu7h8vFtQPr35JBPeX04HpmZLv9HS4in7THAygaEHMmv7/pub?output=csv";
         
-        // BASE DE DATOS RESTAURADA (Pueblito incluido)
-        var locales = [
-            { nombre: "Trupillo", tipo: "local", premium: true, precio: "2.500.000", coords: [10.9588, -74.7846], foto: "trupillo.jpg", broker: "Acropolis", wa: "573243816458" },
-            { nombre: "Bodega Prado", tipo: "bodega", premium: false, precio: "4.500.000", coords: [10.9968, -74.7961], foto: "bodega.jpg", broker: "Inmuebles Caribe", wa: "573000000000" },
-            { nombre: "Local Universidad", tipo: "local", premium: false, precio: "1.800.000", coords: [10.9927, -74.7936], foto: "universidad.jpg", broker: "Broker Externo", wa: "573110000000" },
-            { nombre: "Local Pueblito (Calle 30)", tipo: "local", premium: false, precio: "1.200.000", coords: [10.9634, -74.8396], foto: "pueblito.jpg", broker: "Acropolis", wa: "573243816458" }
-        ];
-
+        var locales = [];
         var marcadores = L.layerGroup().addTo(map);
         var fUso = 'todos';
+
+        async function cargarDatos() {
+            try {
+                const response = await fetch(urlSheet);
+                const data = await response.text();
+                // Procesar CSV manejando saltos de línea y comas
+                const filas = data.split(/\r?\n/).slice(1); 
+                
+                locales = filas.map(fila => {
+                    const col = fila.split(',');
+                    if(col.length < 6) return null; 
+
+                    return {
+                        nombre: col[0],
+                        tipo: col[1] ? col[1].trim().toLowerCase() : '',
+                        precio: col[3],
+                        lat: parseFloat(col[4]),
+                        lng: parseFloat(col[5]),
+                        foto: col[6] ? col[6].trim() : '',
+                        broker: col[7] ? col[7].trim() : 'Acropolis',
+                        wa: col[8] ? col[8].replace(/[^0-9]/g, '') : '573243816458'
+                    };
+                }).filter(l => l !== null && !isNaN(l.lat));
+                
+                filtrarMaestro();
+            } catch (e) {
+                console.error("Error cargando Google Sheets:", e);
+            }
+        }
 
         function filtrarMaestro() {
             marcadores.clearLayers();
             var busqueda = document.getElementById('buscador').value.toLowerCase();
 
-            locales.forEach(function(l) {
-                var cumpleUso = (fUso === 'todos' || l.tipo === fUso || (fUso === 'premium' && l.premium));
+            locales.forEach(l => {
+                var cumpleUso = (fUso === 'todos' || l.tipo === fUso);
                 var cumpleTexto = (l.nombre.toLowerCase().includes(busqueda) || l.broker.toLowerCase().includes(busqueda));
 
                 if (cumpleUso && cumpleTexto) {
-                    var iconColor = l.premium ? 'orange' : 'blue';
-                    var customIcon = L.icon({
-                        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${iconColor}.png`,
-                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-                    });
-
-                    var m = L.marker(l.coords, {icon: customIcon}).addTo(marcadores);
+                    var m = L.marker([l.lat, l.lng]).addTo(marcadores);
                     
-                    // FUNCIÓN "CÓMO LLEGAR" CORREGIDA
+                    // URL de imagen: Si no es link completo, busca en tu GitHub
+                    var imgUrl = l.foto.startsWith('http') ? l.foto : 'https://acropolisinmo-dot.github.io/mapa-acropolis/' + l.foto;
+
                     m.bindPopup(`
                         <div class="popup-ficha">
-                            <img src="${baseRuta + l.foto}" onerror="this.src='https://via.placeholder.com/200x130?text=Acropolis+Realty'">
-                            <div class="broker-tag">Inmobiliaria: ${l.broker}</div>
-                            <h3 style="margin:2px 0; font-size:17px; color:#333">${l.nombre}</h3>
+                            <img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/200x135?text=Acropolis+Realty'">
+                            <div class="broker-tag">Publicado por: ${l.broker}</div>
+                            <h3 style="margin:2px 0; font-size:16px; color:#333">${l.nombre}</h3>
                             <span class="precio">$ ${l.precio}</span>
                             <div class="actions">
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
-                                <a href="https://wa.me/${l.wa}?text=Hola, quiero info de ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
+                                <a href="https://wa.me/${l.wa}?text=Hola, me interesa el inmueble: ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
                             </div>
                         </div>
                     `);
@@ -132,16 +151,18 @@
         }
 
         function buscarMiUbicacion() {
-            map.locate({setView: true, maxZoom: 16});
+            map.locate({setView: true, maxZoom: 15});
         }
 
         map.on('locationfound', function(e) {
+            L.circle(e.latlng, {radius: 50, color: '#d32f2f'}).addTo(map);
             L.marker(e.latlng).addTo(map).bindPopup("<b>Estás aquí</b>").openPopup();
         });
 
-        window.onload = function() {
-            filtrarMaestro();
-            setTimeout(function(){ map.invalidateSize(); }, 600);
+        window.onload = () => { 
+            cargarDatos(); 
+            // Pequeño delay para asegurar que el mapa renderice bien en móviles
+            setTimeout(() => map.invalidateSize(), 600); 
         };
     </script>
 </body>
