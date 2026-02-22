@@ -7,46 +7,39 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; padding: 0; font-family: sans-serif; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         #mi-mapa { height: 100vh; width: 100%; position: absolute; }
         
-        /* Contenedor de Filtros */
+        /* Filtros en la parte superior izquierda */
         .filtros-wrapper {
-            position: absolute; top: 10px; left: 10px; z-index: 1000;
-            display: flex; flex-direction: column; gap: 5px;
+            position: absolute; top: 15px; left: 15px; z-index: 1000;
         }
         .grupo {
-            background: rgba(255, 255, 255, 0.9); padding: 5px;
-            border-radius: 8px; display: flex; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.95); padding: 6px;
+            border-radius: 12px; display: flex; gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         .filter-btn {
-            background: white; border: 1px solid #ccc; padding: 5px 10px;
-            border-radius: 15px; font-size: 11px; cursor: pointer; font-weight: bold;
+            background: white; border: 1px solid #ddd; padding: 8px 15px;
+            border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: bold;
+            transition: 0.3s;
         }
         .active { background: #d32f2f; color: white; border-color: #d32f2f; }
 
-        /* Popups */
-        .popup-ficha { width: 200px; text-align: center; }
-        .popup-ficha img { width: 100%; border-radius: 5px; height: 120px; object-fit: cover; }
-        .precio { color: #d32f2f; font-weight: bold; font-size: 15px; margin: 5px 0; display: block; }
-        .etiqueta { font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 5px; border-radius: 3px; color: white; }
-        .arriendo { background: #2196F3; }
-        .venta { background: #4CAF50; }
-        .btn { display: block; padding: 8px; margin-top: 5px; border-radius: 5px; text-decoration: none; color: white !important; font-weight: bold; font-size: 12px; }
+        /* Estilo de la Ficha */
+        .popup-ficha { width: 210px; text-align: center; }
+        .popup-ficha img { width: 100%; border-radius: 8px; height: 130px; object-fit: cover; background: #eee; }
+        .precio { color: #d32f2f; font-weight: bold; font-size: 17px; margin: 5px 0; display: block; }
+        .btn { display: block; padding: 10px; margin-top: 6px; border-radius: 6px; text-decoration: none; color: white !important; font-weight: bold; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <div class="filtros-wrapper">
-        <div class="grupo" id="uso">
-            <button class="filter-btn active" onclick="filtrar('todos', 'uso', this)">Todos</button>
-            <button class="filter-btn" onclick="filtrar('local', 'uso', this)">Locales</button>
-            <button class="filter-btn" onclick="filtrar('bodega', 'uso', this)">Bodegas</button>
-        </div>
-        <div class="grupo" id="negocio">
-            <button class="filter-btn active" onclick="filtrar('todos', 'negocio', this)">Todo</button>
-            <button class="filter-btn" onclick="filtrar('arriendo', 'negocio', this)">Arriendo</button>
-            <button class="filter-btn" onclick="filtrar('venta', 'negocio', this)">Venta</button>
+        <div class="grupo">
+            <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
+            <button class="filter-btn" onclick="filtrar('local', this)">Locales</button>
+            <button class="filter-btn" onclick="filtrar('bodega', this)">Bodegas</button>
         </div>
     </div>
 
@@ -54,38 +47,41 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. Inicializar Mapa
-        var map = L.map('mi-mapa').setView([10.9750, -74.8100], 13);
+        // 1. Inicializar Mapa quitando el zoom por defecto
+        var map = L.map('mi-mapa', {
+            zoomControl: false // Quitamos el zoom de arriba
+        }).setView([10.9750, -74.8100], 13);
+
+        // 2. Añadir el zoom en la parte inferior derecha
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // 2. Datos
+        // Ruta de imágenes
+        var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
+
         var locales = [
-            { nombre: "trupillo", tipo: "local", negocio: "arriendo", precio: "2.500.000", coords: [10.9588, -74.7846], foto: "trupillo.jpg", area: "59mt²" },
-            { nombre: "Local Universidad", tipo: "local", negocio: "venta", precio: "350.000.000", coords: [10.9927, -74.7936], foto: "universidad.jpg", area: "45mt²" },
-            { nombre: "Bodega Prado", tipo: "bodega", negocio: "arriendo", precio: "4.500.000", coords: [10.9968, -74.7961], foto: "bodega.jpg", area: "200mt²" },
-            { nombre: "Local Calle 30", tipo: "local", negocio: "arriendo", precio: "1.200.000", coords: [10.9634, -74.8396], foto: "pueblito.jpg", area: "35mt²" }
+            { nombre: "trupillo", tipo: "local", precio: "2.500.000", coords: [10.9588, -74.7846], foto: "trupillo.jpg", area: "59mt²" },
+            { nombre: "Local Universidad", tipo: "local", precio: "1.800.000", coords: [10.9927, -74.7936], foto: "universidad.jpg", area: "45mt²" },
+            { nombre: "Bodega Prado", tipo: "bodega", precio: "4.500.000", coords: [10.9968, -74.7961], foto: "bodega.jpg", area: "200mt²" },
+            { nombre: "Local Calle 30", tipo: "local", precio: "1.200.000", coords: [10.9634, -74.8396], foto: "pueblito.jpg", area: "35mt²" }
         ];
 
         var capaMarcadores = L.layerGroup().addTo(map);
         var fUso = 'todos';
-        var fNegocio = 'todos';
 
         function dibujar() {
             capaMarcadores.clearLayers();
             locales.forEach(function(l) {
-                var cUso = (fUso === 'todos' || l.tipo === fUso);
-                var cNegocio = (fNegocio === 'todos' || l.negocio === fNegocio);
-
-                if (cUso && cNegocio) {
+                if (fUso === 'todos' || l.tipo === fUso) {
                     var marker = L.marker(l.coords);
                     marker.bindPopup(`
                         <div class="popup-ficha">
-                            <img src="${l.foto}">
-                            <br><span class="etiqueta ${l.negocio}">${l.negocio}</span>
-                            <h3 style="margin:5px 0">${l.nombre}</h3>
+                            <img src="${baseRuta + l.foto}" onerror="this.src='https://via.placeholder.com/200x130?text=Cargando...'">
+                            <h3 style="margin:8px 0; font-size:16px">${l.nombre}</h3>
                             <span class="precio">$ ${l.precio}</span>
-                            <div style="font-size:11px; color:#666">📏 Área: ${l.area}</div>
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn" style="background:#4285F4">📍 Cómo llegar</a>
+                            <div style="font-size:12px; color:#666; margin-bottom:5px">📏 Área: ${l.area}</div>
+                            <a href="http://googleusercontent.com/maps.google.com/maps?daddr=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn" style="background:#4285F4">📍 Cómo llegar</a>
                             <a href="https://wa.me/573243816458" target="_blank" class="btn" style="background:#25d366">💬 WhatsApp</a>
                         </div>
                     `);
@@ -94,15 +90,11 @@
             });
         }
 
-        function filtrar(val, cat, btn) {
-            // Quitar clase active de los botones del mismo grupo
-            var parent = btn.parentElement;
-            var hijos = parent.querySelectorAll('.filter-btn');
+        function filtrar(val, btn) {
+            var hijos = btn.parentElement.querySelectorAll('.filter-btn');
             hijos.forEach(function(h) { h.classList.remove('active'); });
             btn.classList.add('active');
-
-            if (cat === 'uso') { fUso = val; } 
-            else { fNegocio = val; }
+            fUso = val;
             dibujar();
         }
 
