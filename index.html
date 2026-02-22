@@ -17,20 +17,23 @@
         .logo-container img { width: 100%; height: auto; }
 
         /* FICHA DEL POPUP */
-        .popup-ficha { width: 220px; padding: 5px; }
+        .popup-ficha { width: 230px; padding: 5px; }
         .popup-ficha img { 
             width: 100%; height: 140px; object-fit: cover; 
             border-radius: 8px; margin-bottom: 8px; 
         }
         .popup-ficha h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; text-transform: capitalize; }
-        .info-detalle { font-size: 14px; color: #666; margin-bottom: 10px; line-height: 1.4; }
+        .info-detalle { font-size: 14px; color: #666; margin-bottom: 12px; line-height: 1.4; }
         .precio { color: #d32f2f; font-weight: bold; font-size: 15px; display: block; }
         
-        .btn-wa { 
-            display: block; background: #25d366; color: white !important; 
-            padding: 10px; text-decoration: none; border-radius: 6px; 
-            font-weight: bold; text-align: center; font-size: 14px;
+        /* BOTONES */
+        .btn-accion {
+            display: block; text-align: center; padding: 10px;
+            text-decoration: none; border-radius: 6px; font-weight: bold;
+            font-size: 14px; margin-top: 5px;
         }
+        .btn-gmaps { background: #4285F4; color: white !important; }
+        .btn-wa { background: #25d366; color: white !important; }
     </style>
 </head>
 <body>
@@ -43,10 +46,11 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Configuración inicial del mapa
         var map = L.map('mi-mapa').setView([10.9750, -74.8100], 13);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // --- DATOS DE LOS INMUEBLES ---
+        // --- BASE DE DATOS DE INMUEBLES ---
         const locales = [
             { 
                 nombre: "Local Universidad (Cra 53)", 
@@ -78,7 +82,14 @@
             }
         ];
 
+        // Crear los marcadores en el mapa
         locales.forEach(function(l) {
+            // Enlace dinámico a Google Maps basado en las coordenadas
+            const urlGmaps = `https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}`;
+            
+            // Enlace dinámico a WhatsApp con mensaje personalizado
+            const urlWa = `https://wa.me/573243816458?text=Hola,%20me%20interesa%20información%20del%20inmueble:%20${l.nombre}`;
+
             L.marker(l.coords).addTo(map).bindPopup(`
                 <div class="popup-ficha">
                     <img src="${l.foto}" onerror="this.src='https://via.placeholder.com/220x140?text=Imagen+No+Disponible'">
@@ -87,7 +98,8 @@
                         <span>📏 Área: ${l.area}</span><br>
                         <span class="precio">💰 Canon: ${l.canon}</span>
                     </div>
-                    <a href="https://wa.me/573243816458?text=Hola,%20me%20interesa%20el%20inmueble%20${l.nombre}" target="_blank" class="btn-wa">Consultar WhatsApp</a>
+                    <a href="${urlGmaps}" target="_blank" class="btn-accion btn-gmaps">📍 Cómo llegar</a>
+                    <a href="${urlWa}" target="_blank" class="btn-accion btn-wa">💬 Consultar WhatsApp</a>
                 </div>
             `);
         });
