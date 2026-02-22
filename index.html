@@ -6,18 +6,30 @@
     <title>Acropolis Realty - Mapa de Inmuebles</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #mi-mapa { height: 100vh; width: 100%; }
+        
+        /* LOGO */
         .logo-container {
             position: absolute; top: 20px; right: 20px; z-index: 1000;
-            background: none !important; max-width: 150px;
+            max-width: 140px; background: none;
         }
         .logo-container img { width: 100%; height: auto; }
-        .popup-ficha { width: 230px; text-align: center; }
-        .popup-ficha img { width: 100%; border-radius: 8px; margin-bottom: 10px; display: block; }
+
+        /* FICHA DEL POPUP */
+        .popup-ficha { width: 220px; padding: 5px; }
+        .popup-ficha img { 
+            width: 100%; height: 140px; object-fit: cover; 
+            border-radius: 8px; margin-bottom: 8px; 
+        }
+        .popup-ficha h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; text-transform: capitalize; }
+        .info-detalle { font-size: 14px; color: #666; margin-bottom: 10px; line-height: 1.4; }
+        .precio { color: #d32f2f; font-weight: bold; font-size: 15px; display: block; }
+        
         .btn-wa { 
             display: block; background: #25d366; color: white !important; 
-            padding: 12px; text-decoration: none; border-radius: 8px; font-weight: bold;
+            padding: 10px; text-decoration: none; border-radius: 6px; 
+            font-weight: bold; text-align: center; font-size: 14px;
         }
     </style>
 </head>
@@ -31,23 +43,51 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map('mi-mapa').setView([10.9900, -74.7950], 14);
+        var map = L.map('mi-mapa').setView([10.9750, -74.8100], 13);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Eliminamos "Fotos/" porque tus fotos están sueltas en el repositorio
+        // --- DATOS DE LOS INMUEBLES ---
         const locales = [
-            { nombre: "Local Universidad (Cra 53)", coords: [10.9927, -74.7936], foto: "universidad.jpg" },
-            { nombre: "Bodega Prado (Cra 54)", coords: [10.9968, -74.7961], foto: "bodega.jpg" },
-            { nombre: "Local Calle 30", coords: [10.9634, -74.8396], foto: "pueblito.jpg" },
-            { nombre: "trupillo", coords: [10.958857722011313, -74.78469889980501], foto: "trupillo.jpg" }
+            { 
+                nombre: "Local Universidad (Cra 53)", 
+                coords: [10.9927, -74.7936], 
+                foto: "universidad.jpg",
+                area: "45 mt²",
+                canon: "$ 1.800.000"
+            },
+            { 
+                nombre: "Bodega Prado (Cra 54)", 
+                coords: [10.9968, -74.7961], 
+                foto: "bodega.jpg",
+                area: "200 mt²",
+                canon: "$ 4.500.000"
+            },
+            { 
+                nombre: "Local Calle 30", 
+                coords: [10.9634, -74.8396], 
+                foto: "pueblito.jpg",
+                area: "35 mt²",
+                canon: "$ 1.200.000"
+            },
+            { 
+                nombre: "trupillo", 
+                coords: [10.958857722011313, -74.78469889980501], 
+                foto: "trupillo.jpg",
+                area: "59 mt²",
+                canon: "$ 2.500.000"
+            }
         ];
 
         locales.forEach(function(l) {
             L.marker(l.coords).addTo(map).bindPopup(`
                 <div class="popup-ficha">
-                    <img src="${l.foto}">
-                    <h3 style="margin:5px 0">${l.nombre}</h3>
-                    <a href="https://wa.me/573243816458" target="_blank" class="btn-wa">WhatsApp</a>
+                    <img src="${l.foto}" onerror="this.src='https://via.placeholder.com/220x140?text=Imagen+No+Disponible'">
+                    <h3>${l.nombre}</h3>
+                    <div class="info-detalle">
+                        <span>📏 Área: ${l.area}</span><br>
+                        <span class="precio">💰 Canon: ${l.canon}</span>
+                    </div>
+                    <a href="https://wa.me/573243816458?text=Hola,%20me%20interesa%20el%20inmueble%20${l.nombre}" target="_blank" class="btn-wa">Consultar WhatsApp</a>
                 </div>
             `);
         });
