@@ -3,106 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acropolis Realty - Mapa de Inmuebles</title>
+    <title>Acropolis Realty - Mapa Pro</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.css" />
+
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
         #mi-mapa { height: 100vh; width: 100%; }
         
-        /* LOGO */
-        .logo-container {
-            position: absolute; top: 20px; right: 20px; z-index: 1000;
-            max-width: 140px; background: none;
+        /* 1 & 8. ESTILO DE FILTROS */
+        .filtros-container {
+            position: absolute; top: 10px; left: 50px; z-index: 1000;
+            display: flex; gap: 5px; flex-wrap: wrap; max-width: 250px;
         }
-        .logo-container img { width: 100%; height: auto; }
+        .filter-btn {
+            background: white; border: 1px solid #ccc; padding: 5px 10px;
+            border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold;
+        }
+        .filter-btn.active { background: #d32f2f; color: white; border-color: #d32f2f; }
 
-        /* FICHA DEL POPUP */
-        .popup-ficha { width: 230px; padding: 5px; }
-        .popup-ficha img { 
-            width: 100%; height: 140px; object-fit: cover; 
-            border-radius: 8px; margin-bottom: 8px; 
-        }
-        .popup-ficha h3 { margin: 0 0 5px 0; font-size: 16px; color: #333; text-transform: capitalize; }
-        .info-detalle { font-size: 14px; color: #666; margin-bottom: 12px; line-height: 1.4; }
-        .precio { color: #d32f2f; font-weight: bold; font-size: 15px; display: block; }
-        
-        /* BOTONES */
+        /* 4. GALERÍA SLIDER */
+        .slider { position: relative; width: 100%; height: 140px; overflow: hidden; border-radius: 8px; }
+        .slider img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* POPUP ESTILO */
+        .popup-ficha { width: 220px; }
+        .price-tag { color: #d32f2f; font-weight: bold; font-size: 16px; margin: 5px 0; }
         .btn-accion {
-            display: block; text-align: center; padding: 10px;
-            text-decoration: none; border-radius: 6px; font-weight: bold;
-            font-size: 14px; margin-top: 5px;
+            display: block; text-align: center; padding: 8px; margin-top: 5px;
+            text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px;
         }
         .btn-gmaps { background: #4285F4; color: white !important; }
         .btn-wa { background: #25d366; color: white !important; }
+
+        .logo-container { position: absolute; bottom: 20px; right: 10px; z-index: 1000; max-width: 100px; }
+        .logo-container img { width: 100%; opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <div class="logo-container">
-        <img src="logo.png" alt="Acropolis Realty">
+    <div class="filtros-container">
+        <button class="filter-btn active" onclick="filtrar('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="filtrar('local', this)">Locales</button>
+        <button class="filter-btn" onclick="filtrar('bodega', this)">Bodegas</button>
     </div>
 
     <div id="mi-mapa"></div>
+    <div class="logo-container"><img src="logo.png"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Configuración inicial del mapa
-        var map = L.map('mi-mapa').setView([10.9750, -74.8100], 13);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet-geosearch@3.11.0/dist/bundle.min.js"></script>
 
-        // --- BASE DE DATOS DE INMUEBLES ---
+    <script>
+        // 7. CAPAS DE MAPA (Satelital y Normal)
+        const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+        const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+
+        const map = L.map('mi-mapa', {
+            center: [10.9750, -74.8100],
+            zoom: 13,
+            layers: [osm]
+        });
+
+        const baseMaps = { "Normal": osm, "Satélite": satelite };
+        L.control.layers(baseMaps).addTo(map);
+
+        // 2. BUSCADOR DE DIRECCIONES
+        const searchControl = new GeoSearch.GeoSearchControl({
+            provider: new GeoSearch.OpenStreetMapProvider(),
+            style: 'bar',
+            showMarker: true,
+            autoClose: true
+        });
+        map.addControl(searchControl);
+
+        // 6. GEOLOCALIZACIÓN
+        map.locate({setView: false, watch: true});
+        const userIcon = L.divIcon({className: 'user-location', html: '🔵', iconSize: [20, 20]});
+        let userMarker;
+        map.on('locationfound', (e) => {
+            if (!userMarker) userMarker = L.marker(e.latlng, {icon: userIcon}).addTo(map);
+            else userMarker.setLatLng(e.latlng);
+        });
+
+        // 3 & 5. CLUSTERS Y PINES PERSONALIZADOS
+        const markers = L.markerClusterGroup();
+        
         const locales = [
-            { 
-                nombre: "Local Universidad (Cra 53)", 
-                coords: [10.9927, -74.7936], 
-                foto: "universidad.jpg",
-                area: "45 mt²",
-                canon: "$ 1.800.000"
-            },
-            { 
-                nombre: "Bodega Prado (Cra 54)", 
-                coords: [10.9968, -74.7961], 
-                foto: "bodega.jpg",
-                area: "200 mt²",
-                canon: "$ 4.500.000"
-            },
-            { 
-                nombre: "Local Calle 30", 
-                coords: [10.9634, -74.8396], 
-                foto: "pueblito.jpg",
-                area: "35 mt²",
-                canon: "$ 1.200.000"
-            },
-            { 
-                nombre: "trupillo", 
-                coords: [10.958857722011313, -74.78469889980501], 
-                foto: "trupillo.jpg",
-                area: "59 mt²",
-                canon: "$ 2.500.000"
-            }
+            { nombre: "trupillo", tipo: "local", precio: 2500000, coords: [10.9588, -74.7846], fotos: ["trupillo.jpg"], area: "59mt²" },
+            { nombre: "Local Universidad", tipo: "local", precio: 1800000, coords: [10.9927, -74.7936], fotos: ["universidad.jpg"], area: "45mt²" },
+            { nombre: "Bodega Prado", tipo: "bodega", precio: 4500000, coords: [10.9968, -74.7961], fotos: ["bodega.jpg"], area: "200mt²" }
         ];
 
-        // Crear los marcadores en el mapa
-        locales.forEach(function(l) {
-            // Enlace dinámico a Google Maps basado en las coordenadas
-            const urlGmaps = `https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}`;
-            
-            // Enlace dinámico a WhatsApp con mensaje personalizado
-            const urlWa = `https://wa.me/573243816458?text=Hola,%20me%20interesa%20información%20del%20inmueble:%20${l.nombre}`;
+        function renderMarkers(filtro = 'todos') {
+            markers.clearLayers();
+            locales.forEach(l => {
+                if (filtro === 'todos' || l.tipo === filtro) {
+                    // Pin de color según tipo
+                    const color = l.tipo === 'bodega' ? 'red' : 'blue';
+                    const customIcon = L.icon({
+                        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                    });
 
-            L.marker(l.coords).addTo(map).bindPopup(`
-                <div class="popup-ficha">
-                    <img src="${l.foto}" onerror="this.src='https://via.placeholder.com/220x140?text=Imagen+No+Disponible'">
-                    <h3>${l.nombre}</h3>
-                    <div class="info-detalle">
-                        <span>📏 Área: ${l.area}</span><br>
-                        <span class="precio">💰 Canon: ${l.canon}</span>
-                    </div>
-                    <a href="${urlGmaps}" target="_blank" class="btn-accion btn-gmaps">📍 Cómo llegar</a>
-                    <a href="${urlWa}" target="_blank" class="btn-accion btn-wa">💬 Consultar WhatsApp</a>
-                </div>
-            `);
-        });
+                    const m = L.marker(l.coords, {icon: customIcon});
+                    m.bindPopup(`
+                        <div class="popup-ficha">
+                            <div class="slider"><img src="${l.fotos[0]}"></div>
+                            <h3>${l.nombre}</h3>
+                            <div class="price-tag">$ ${l.precio.toLocaleString()}</div>
+                            <div style="font-size:12px; color:#666">📏 Área: ${l.area} | 🏠 ${l.tipo}</div>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-accion btn-gmaps">📍 Cómo llegar</a>
+                            <a href="https://wa.me/573243816458" target="_blank" class="btn-accion btn-wa">💬 WhatsApp</a>
+                        </div>
+                    `);
+                    markers.addLayer(m);
+                }
+            });
+            map.addLayer(markers);
+        }
+
+        function filtrar(tipo, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderMarkers(tipo);
+        }
+
+        renderMarkers();
     </script>
 </body>
 </html>
