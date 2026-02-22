@@ -10,9 +10,9 @@
         #mi-mapa { height: 100%; width: 100%; position: absolute; }
         .header-ui { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .search-bar { background: white; padding: 12px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; }
-        .search-bar input { border: none; width: 100%; outline: none; margin-left: 8px; font-size: 16px; }
-        .filters { display: flex; gap: 6px; overflow-x: auto; padding: 5px 0; }
-        .btn-f { background: white; border: none; padding: 10px 18px; border-radius: 25px; white-space: nowrap; font-size: 12px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
+        .search-bar input { border: none; width: 100%; outline: none; margin-left: 8px; font-size: 16px; width: 100%; }
+        .filters { display: flex; gap: 6px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        .btn-f { background: white; border: none; padding: 10px 18px; border-radius: 25px; white-space: nowrap; font-size: 12px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .active { background: #d32f2f !important; color: white !important; }
         .popup-ficha { width: 220px; text-align: center; }
         .popup-ficha img { width: 100%; height: 140px; object-fit: cover; border-radius: 10px; background: #eee; }
@@ -37,8 +37,8 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Forzamos el mapa a iniciar en Barranquilla
-        var map = L.map('mi-mapa', { zoomControl: false }).setView([10.993, -74.793], 13);
+        // Forzar inicio en Barranquilla siempre
+        var map = L.map('mi-mapa', { zoomControl: false }).setView([10.98, -74.80], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         var urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTT50TzNyq67ZMuqWEtq4MI7q81QQS3RLLHu7h8vFtQPr35JBPeX04HpmZLv9HS4in7THAygaEHMmv7/pub?output=csv";
@@ -50,23 +50,25 @@
             try {
                 const res = await fetch(urlCSV);
                 const csv = await res.text();
-                // Limpieza de datos: manejamos comas y saltos de línea
                 const filas = csv.split(/\r?\n/).slice(1);
 
                 locales = filas.map(f => {
-                    const c = f.split(',');
+                    // DETECTOR DE SEPARADOR: Prueba con coma o punto y coma
+                    let c = f.split(',');
+                    if (c.length < 5) c = f.split(';'); 
+                    
                     if (c.length < 5) return null;
 
-                    // CORRECCIÓN DE COORDENADAS: Reemplaza coma por punto si existe
-                    let latStr = c[4] ? c[4].replace(',', '.') : '0';
-                    let lngStr = c[5] ? c[5].replace(',', '.') : '0';
+                    // Limpieza total de coordenadas
+                    let latRaw = c[4] ? c[4].trim().replace(',', '.') : '';
+                    let lngRaw = c[5] ? c[5].trim().replace(',', '.') : '';
 
                     return {
-                        nombre: c[0] || '',
-                        direccion: c[1] || '',
-                        precio: c[3] || '',
-                        lat: parseFloat(latStr),
-                        lng: parseFloat(lngStr),
+                        nombre: c[0] ? c[0].trim() : '',
+                        direccion: c[1] ? c[1].trim() : '',
+                        precio: c[3] ? c[3].trim() : '',
+                        lat: parseFloat(latRaw),
+                        lng: parseFloat(lngRaw),
                         foto: c[6] ? c[6].trim() : '',
                         wa: c[7] ? c[7].trim() : '573243816458',
                         area: c[8] ? c[8].trim() : ''
@@ -74,7 +76,14 @@
                 }).filter(l => l && !isNaN(l.lat) && l.lat !== 0);
                 
                 dibujar();
-            } catch (e) { console.error("Error cargando Excel:", e); }
+                
+                // Si hay datos, centrar el mapa en ellos
+                if(locales.length > 0) {
+                    const group = new L.featureGroup(locales.map(l => L.marker([l.lat, l.lng])));
+                    map.fitBounds(group.getBounds().pad(0.2));
+                }
+
+            } catch (e) { console.error("Error:", e); }
         }
 
         function dibujar() {
@@ -93,12 +102,12 @@
                     L.marker([l.lat, l.lng]).addTo(capaMarkers)
                      .bindPopup(`
                         <div class="popup-ficha">
-                            <img src="${urlFoto}" onerror="this.src='https://via.placeholder.com/200x140?text=Acropolis+Realty'">
+                            <img src="${urlFoto}" onerror="this.src='https://via.placeholder.com/200x140?text=Cargando+Foto...'">
                             <h3 style="margin:8px 0 0 0">${l.nombre}</h3>
                             <span class="precio">$ ${l.precio}</span>
-                            <div style="font-size:12px; margin-bottom:10px">📏 ${l.area}</div>
+                            <div style="font-size:12px; margin-bottom:10px"><b>Área:</b> ${l.area}</div>
                             <a href="https://www.google.com/maps/dir/?api=1&destination=${l.lat},${l.lng}" target="_blank" class="btn-act" style="background:#4285F4">📍 Cómo llegar</a>
-                            <a href="https://wa.me/${l.wa}?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
+                            <a href="https://wa.me/${l.wa}?text=Hola, info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
                         </div>
                      `);
                 }
