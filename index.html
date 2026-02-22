@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acropolis Realty - Mapa de Inmuebles</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        #mi-mapa { height: 100vh; width: 100%; }
+
+        /* Contenedor del Logo */
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            max-width: 180px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Fichas de Inmuebles */
+        .popup-ficha { width: 230px; text-align: center; }
+        .popup-ficha img { width: 100%; border-radius: 8px; margin-bottom: 10px; }
+        
+        .btn-wa { 
+            display: block; background: #25d366; color: white !important; 
+            padding: 12px; text-decoration: none; border-radius: 8px; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <img src="logo.png" alt="Acropolis Realty" onerror="this.parentElement.innerHTML='<h3>Acropolis Realty</h3>'">
+    </div>
+
+    <div id="mi-mapa"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('mi-mapa').setView([10.9900, -74.7950], 14);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        const locales = [
+            { nombre: "Local Universidad (Cra 53)", coords: [10.9927, -74.7936], foto: "fotos/universidad.jpg" },
+            { nombre: "Bodega Prado (Cra 54)", coords: [10.9968, -74.7961], foto: "fotos/bodega.jpg" },
+            { nombre: "Local Calle 30", coords: [10.9634, -74.8396], foto: "fotos/pueblito.jpg" }
+        ];
+
+        locales.forEach(function(l) {
+            L.marker(l.coords).addTo(map).bindPopup(`
+                <div class="popup-ficha">
+                    <img src="${l.foto}">
+                    <h3 style="margin:5px 0">${l.nombre}</h3>
+                    <a href="https://wa.me/573243816458" target="_blank" class="btn-wa">WhatsApp</a>
+                </div>
+            `);
+        });
+    </script>
+</body>
+</html>
