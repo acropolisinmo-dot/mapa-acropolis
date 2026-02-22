@@ -2,41 +2,68 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acropolis Realty - Mapa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Acropolis Realty</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        /* Forzamos que el cuerpo y el mapa ocupen el 100% de la pantalla */
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-        #mi-mapa { height: 100%; width: 100%; }
+        /* ESTO ASEGURA QUE EL MAPA TENGA TAMAÑO */
+        html, body { 
+            height: 100%; 
+            width: 100%; 
+            margin: 0; 
+            padding: 0; 
+        }
         
-        /* Filtros flotantes */
-        .filtros-wrapper {
-            position: absolute; top: 10px; left: 10px; z-index: 1000;
-            background: white; padding: 5px; border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; gap: 5px;
+        #mi-mapa { 
+            height: 100vh; 
+            width: 100vw; 
+            display: block;
         }
-        .filter-btn {
-            border: 1px solid #ccc; background: white; padding: 8px 12px;
-            border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer;
-        }
-        .active { background: #d32f2f; color: white; border-color: #d32f2f; }
 
-        /* Posición del Zoom personalizada para celular */
+        .filtros-wrapper {
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            z-index: 9999; /* Máxima prioridad */
+            background: white; 
+            padding: 8px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 5px;
+        }
+
+        .filter-btn {
+            border: 1px solid #ccc; 
+            background: #fff; 
+            padding: 6px 12px;
+            border-radius: 15px; 
+            font-size: 12px; 
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .active { 
+            background: #d32f2f !important; 
+            color: white !important; 
+            border-color: #d32f2f !important; 
+        }
+
+        /* Subimos el zoom para que se vea en el celular */
         .leaflet-control-zoom {
-            margin-bottom: 50px !important; /* Lo subimos lo suficiente para que sea visible */
+            margin-bottom: 60px !important;
             margin-right: 15px !important;
         }
 
-        /* Ficha del Local */
-        .popup-ficha { width: 200px; text-align: center; }
-        .popup-ficha img { width: 100%; border-radius: 5px; height: 120px; object-fit: cover; }
-        .precio { color: #d32f2f; font-weight: bold; font-size: 16px; margin: 5px 0; display: block; }
-        .btn { 
-            display: block; padding: 10px; margin-top: 5px; border-radius: 5px; 
+        .popup-ficha { width: 180px; text-align: center; }
+        .popup-ficha img { width: 100%; height: 110px; object-fit: cover; border-radius: 4px; }
+        .precio { color: #d32f2f; font-weight: bold; display: block; margin: 5px 0; }
+        .btn-link { 
+            display: block; padding: 8px; margin-top: 5px; border-radius: 4px; 
             text-decoration: none; color: white !important; font-weight: bold; 
-            font-size: 12px; text-align: center; 
+            font-size: 11px; text-align: center;
         }
     </style>
 </head>
@@ -52,28 +79,60 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Inicializamos el mapa sin zoom control por defecto
-        var map = L.map('mi-mapa', { zoomControl: false }).setView([10.9750, -74.8100], 13);
-        
-        // Añadimos el zoom en la derecha
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        // Inicializar con un retraso mínimo para asegurar que el HTML cargó
+        window.onload = function() {
+            var map = L.map('mi-mapa', { zoomControl: false }).setView([10.9750, -74.8100], 13);
+            
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
 
-        var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
+            var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
 
-        var locales = [
-            { nombre: "trupillo", tipo: "local", precio: "2.500.000", coords: [10.9588, -74.7846], foto: "trupillo.jpg", area: "59mt²" },
-            { nombre: "Local Universidad", tipo: "local", precio: "1.800.000", coords: [10.9927, -74.7936], foto: "universidad.jpg", area: "45mt²" },
-            { nombre: "Bodega Prado", tipo: "bodega", precio: "4.500.000", coords: [10.9968, -74.7961], foto: "bodega.jpg", area: "200mt²" },
-            { nombre: "Local Calle 30", tipo: "local", precio: "1.200.000", coords: [10.9634, -74.8396], foto: "pueblito.jpg", area: "35mt²" }
-        ];
+            var locales = [
+                { nombre: "trupillo", tipo: "local", precio: "2.500.000", coords: [10.9588, -74.7846], foto: "trupillo.jpg" },
+                { nombre: "Local Universidad", tipo: "local", precio: "1.800.000", coords: [10.9927, -74.7936], foto: "universidad.jpg" },
+                { nombre: "Bodega Prado", tipo: "bodega", precio: "4.500.000", coords: [10.9968, -74.7961], foto: "bodega.jpg" },
+                { nombre: "Local Calle 30", tipo: "local", precio: "1.200.000", coords: [10.9634, -74.8396], foto: "pueblito.jpg" }
+            ];
 
-        var capaMarcadores = L.layerGroup().addTo(map);
-        var fUso = 'todos';
+            var capaMarcadores = L.layerGroup().addTo(map);
+            var fUso = 'todos';
 
-        function dibujar() {
-            capaMarcadores.clearLayers();
-            locales.forEach(function(l) {
-                if (fUso === 'todos' || l.tipo === fUso) {
-                    var marker = L.marker(l.coords
+            function dibujar() {
+                capaMarcadores.clearLayers();
+                locales.forEach(function(l) {
+                    if (fUso === 'todos' || l.tipo === fUso) {
+                        var marker = L.marker(l.coords).addTo(capaMarcadores);
+                        marker.bindPopup(`
+                            <div class="popup-ficha">
+                                <img src="${baseRuta + l.foto}" onerror="this.src='https://via.placeholder.com/180x110?text=Cargando...'">
+                                <h4 style="margin:5px 0">${l.nombre}</h4>
+                                <span class="precio">$ ${l.precio}</span>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-link" style="background:#4285F4">📍 Cómo llegar</a>
+                                <a href="https://wa.me/573243816458" target="_blank" class="btn-link" style="background:#25d366">💬 WhatsApp</a>
+                            </div>
+                        `);
+                    }
+                });
+            }
+
+            // Hacer la función filtrar disponible globalmente
+            window.filtrar = function(val, btn) {
+                var botones = document.querySelectorAll('.filter-btn');
+                botones.forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                fUso = val;
+                dibujar();
+            };
+
+            dibujar();
+            
+            // Forzar actualización de tamaño para evitar el "cuadro gris/blanco"
+            setTimeout(function(){ map.invalidateSize(); }, 500);
+        };
+    </script>
+</body>
+</html>
