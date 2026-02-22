@@ -14,7 +14,7 @@
         }
         .logo-container img { width: 100%; height: auto; }
         .popup-ficha { width: 230px; text-align: center; }
-        .popup-ficha img { width: 100%; border-radius: 8px; margin-bottom: 10px; background: #eee; min-height: 100px; }
+        .popup-ficha img { width: 100%; border-radius: 8px; margin-bottom: 10px; display: block; }
         .btn-wa { 
             display: block; background: #25d366; color: white !important; 
             padding: 12px; text-decoration: none; border-radius: 8px; font-weight: bold;
@@ -34,20 +34,18 @@
         var map = L.map('mi-mapa').setView([10.9900, -74.7950], 14);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Agregamos un número de versión aleatorio para que el celular no use fotos viejas
-        const v = Date.now();
-
+        // Eliminamos "Fotos/" porque tus fotos están sueltas en el repositorio
         const locales = [
-            { nombre: "Local Universidad (Cra 53)", coords: [10.9927, -74.7936], foto: "Fotos/universidad.jpg?v=" + v },
-            { nombre: "Bodega Prado (Cra 54)", coords: [10.9968, -74.7961], foto: "Fotos/bodega.jpg?v=" + v },
-            { nombre: "Local Calle 30", coords: [10.9634, -74.8396], foto: "Fotos/pueblito.jpg?v=" + v },
-            { nombre: "trupillo", coords: [10.958857722011313, -74.78469889980501], foto: "Fotos/trupillo.jpg?v=" + v }
+            { nombre: "Local Universidad (Cra 53)", coords: [10.9927, -74.7936], foto: "universidad.jpg" },
+            { nombre: "Bodega Prado (Cra 54)", coords: [10.9968, -74.7961], foto: "bodega.jpg" },
+            { nombre: "Local Calle 30", coords: [10.9634, -74.8396], foto: "pueblito.jpg" },
+            { nombre: "trupillo", coords: [10.958857722011313, -74.78469889980501], foto: "trupillo.jpg" }
         ];
 
         locales.forEach(function(l) {
             L.marker(l.coords).addTo(map).bindPopup(`
                 <div class="popup-ficha">
-                    <img src="${l.foto}" onerror="this.src='https://via.placeholder.com/230x150?text=Cargando+Imagen...'">
+                    <img src="${l.foto}">
                     <h3 style="margin:5px 0">${l.nombre}</h3>
                     <a href="https://wa.me/573243816458" target="_blank" class="btn-wa">WhatsApp</a>
                 </div>
