@@ -8,26 +8,40 @@
     <style>
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         #mi-mapa { height: 100%; width: 100%; position: absolute; top: 0; left: 0; }
+        
+        /* Interfaz Superior */
         .header-ui { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
-        .search-bar { background: white; padding: 12px 18px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; }
-        .search-bar input { border: none; width: 100%; outline: none; font-size: 15px; margin-left: 8px; width: 100%; }
+        
+        /* Contenedor Logo y Buscador */
+        .top-row { display: flex; align-items: center; gap: 10px; }
+        .logo-acropolis { height: 45px; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .search-bar { background: white; padding: 12px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; flex-grow: 1; }
+        .search-bar input { border: none; width: 100%; outline: none; font-size: 15px; margin-left: 8px; }
+
         .filters { display: flex; gap: 6px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
         .btn-f { background: white; border: none; padding: 10px 18px; border-radius: 25px; white-space: nowrap; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
         .active { background: #d32f2f !important; color: white !important; }
-        .popup-ficha { width: 230px; padding: 5px; }
-        .popup-ficha img { width: 100%; height: 130px; object-fit: cover; border-radius: 12px; margin-bottom: 8px; }
-        .precio { color: #d32f2f; font-weight: 800; font-size: 18px; display: block; margin: 2px 0; }
-        .medida { font-size: 13px; color: #444; margin-bottom: 8px; display: block; }
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn-act { padding: 10px; text-align: center; border-radius: 8px; text-decoration: none; color: white !important; font-size: 12px; font-weight: bold; }
+
+        /* Botón GPS */
+        .gps-btn { position: absolute; bottom: 30px; right: 20px; z-index: 1000; background: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 24px; cursor: pointer; border: none; }
+
+        /* Popups */
+        .popup-ficha { width: 230px; text-align: center; }
+        .popup-ficha img { width: 100%; height: 130px; object-fit: cover; border-radius: 12px; }
+        .precio { color: #d32f2f; font-weight: 800; font-size: 18px; display: block; margin: 4px 0; }
+        .btn-act { display: block; padding: 10px; margin-top: 5px; border-radius: 8px; text-decoration: none; color: white !important; font-size: 12px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="header-ui">
-        <div class="search-bar">
-            <span>🔍</span>
-            <input type="text" id="buscador" placeholder="Buscar por nombre o barrio..." onkeyup="filtrarMaestro()">
+        <div class="top-row">
+            <img src="https://acropolisinmo-dot.github.io/mapa-acropolis/logo.png" class="logo-acropolis" onerror="this.style.display='none'">
+            <div class="search-bar">
+                <span>🔍</span>
+                <input type="text" id="buscador" placeholder="Buscar local o barrio..." onkeyup="filtrarMaestro()">
+            </div>
         </div>
         <div class="filters">
             <button class="btn-f active" onclick="cambiarUso('todos', this)">Todos</button>
@@ -35,6 +49,8 @@
             <button class="btn-f" onclick="cambiarUso('bodega', this)">Bodegas</button>
         </div>
     </div>
+
+    <button class="gps-btn" onclick="buscarMiUbicacion()">📍</button>
 
     <div id="mi-mapa"></div>
 
@@ -45,10 +61,9 @@
 
         var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
         
-        // --- DATOS EXTRAÍDOS DE TU IMAGEN ---
         var locales = [
             { nombre: "Pueblito (Cra 12)", tipo: "local", precio: "1.700.000", area: "45 mt²", coords: [10.963471, -74.839640], foto: "pueblito.jpg" },
-            { nombre: "Pueblito (Local 3)", tipo: "local", precio: "1.000.000", area: "84 mt²", coords: [10.963471, -74.839640], foto: "pueblito.jpg" },
+            { nombre: "Pueblito (Local 3)", tipo: "local", precio: "1.000.000", area: "84 mt²", coords: [10.963471, -74.839641], foto: "pueblito.jpg" },
             { nombre: "Universidad", tipo: "local", precio: "7.000.000", area: "110 mt²", coords: [10.992707, -74.793603], foto: "universidad.jpg" },
             { nombre: "Bodega Cra 54", tipo: "bodega", precio: "10.000.000", area: "710 mt²", coords: [10.996854, -74.796166], foto: "bodega.jpg" },
             { nombre: "Trupillo", tipo: "local", precio: "2.500.000", area: "59 mt²", coords: [10.9588, -74.7847], foto: "trupillo.jpg" },
@@ -61,28 +76,30 @@
         function filtrarMaestro() {
             marcadores.clearLayers();
             var busqueda = document.getElementById('buscador').value.toLowerCase();
-
             locales.forEach(function(l) {
-                var cumpleUso = (fUso === 'todos' || l.tipo === fUso);
-                var cumpleTexto = l.nombre.toLowerCase().includes(busqueda);
-
-                if (cumpleUso && cumpleTexto) {
-                    var m = L.marker(l.coords).addTo(marcadores);
-                    m.bindPopup(`
+                if ((fUso === 'todos' || l.tipo === fUso) && l.nombre.toLowerCase().includes(busqueda)) {
+                    L.marker(l.coords).addTo(marcadores).bindPopup(`
                         <div class="popup-ficha">
-                            <img src="${baseRuta + l.foto}" onerror="this.src='https://via.placeholder.com/200x130?text=Acropolis+Realty'">
-                            <h3 style="margin:2px 0; font-size:17px">${l.nombre}</h3>
+                            <img src="${baseRuta + l.foto}" onerror="this.src='https://via.placeholder.com/200x130?text=Acropolis'">
+                            <h3>${l.nombre}</h3>
                             <span class="precio">$ ${l.precio}</span>
-                            <span class="medida">📏 Área: <b>${l.area}</b></span>
-                            <div class="actions">
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
-                                <a href="https://wa.me/573243816458?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
-                            </div>
+                            <span style="font-size:12px">📏 Área: ${l.area}</span>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
+                            <a href="https://wa.me/573243816458?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
                         </div>
                     `);
                 }
             });
         }
+
+        // Función GPS
+        function buscarMiUbicacion() {
+            map.locate({setView: true, maxZoom: 16});
+        }
+        map.on('locationfound', function(e) {
+            L.circle(e.latlng, {radius: 50}).addTo(map);
+            L.marker(e.latlng).addTo(map).bindPopup("Estás aquí").openPopup();
+        });
 
         function cambiarUso(val, btn) {
             document.querySelectorAll('.btn-f').forEach(b => b.classList.remove('active'));
