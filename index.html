@@ -10,18 +10,21 @@
         #mi-mapa { height: 100%; width: 100%; position: absolute; top: 0; left: 0; }
         
         /* Interfaz Superior */
-        .header-ui { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+        .header-ui { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 5px; }
         
-        /* Contenedor Logo y Buscador */
-        .top-row { display: flex; align-items: center; gap: 10px; }
-        .logo-acropolis { height: 45px; background: white; padding: 5px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
-        .search-bar { background: white; padding: 12px 15px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; flex-grow: 1; }
+        /* Buscador */
+        .search-bar { background: white; padding: 12px 18px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; }
         .search-bar input { border: none; width: 100%; outline: none; font-size: 15px; margin-left: 8px; }
 
-        .filters { display: flex; gap: 6px; overflow-x: auto; padding: 5px 0; scrollbar-width: none; }
+        /* Contenedor Segunda Fila (Filtros a la izquierda, Logo a la derecha) */
+        .second-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+
+        .filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
         .btn-f { background: white; border: none; padding: 10px 18px; border-radius: 25px; white-space: nowrap; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
         .active { background: #d32f2f !important; color: white !important; }
+
+        /* LOGO: Ubicado a la derecha, debajo del buscador, sin fondo */
+        .logo-acropolis { height: 55px; background: transparent; border: none; pointer-events: none; }
 
         /* Botón GPS */
         .gps-btn { position: absolute; bottom: 30px; right: 20px; z-index: 1000; background: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 24px; cursor: pointer; border: none; }
@@ -36,17 +39,18 @@
 <body>
 
     <div class="header-ui">
-        <div class="top-row">
-            <img src="https://acropolisinmo-dot.github.io/mapa-acropolis/logo.png" class="logo-acropolis" onerror="this.style.display='none'">
-            <div class="search-bar">
-                <span>🔍</span>
-                <input type="text" id="buscador" placeholder="Buscar local o barrio..." onkeyup="filtrarMaestro()">
-            </div>
+        <div class="search-bar">
+            <span>🔍</span>
+            <input type="text" id="buscador" placeholder="Buscar local o barrio..." onkeyup="filtrarMaestro()">
         </div>
-        <div class="filters">
-            <button class="btn-f active" onclick="cambiarUso('todos', this)">Todos</button>
-            <button class="btn-f" onclick="cambiarUso('local', this)">Locales</button>
-            <button class="btn-f" onclick="cambiarUso('bodega', this)">Bodegas</button>
+
+        <div class="second-row">
+            <div class="filters">
+                <button class="btn-f active" onclick="cambiarUso('todos', this)">Todos</button>
+                <button class="btn-f" onclick="cambiarUso('local', this)">Locales</button>
+                <button class="btn-f" onclick="cambiarUso('bodega', this)">Bodegas</button>
+            </div>
+            <img src="https://acropolisinmo-dot.github.io/mapa-acropolis/logo.png" class="logo-acropolis" onerror="this.style.display='none'">
         </div>
     </div>
 
@@ -84,20 +88,21 @@
                             <h3>${l.nombre}</h3>
                             <span class="precio">$ ${l.precio}</span>
                             <span style="font-size:12px">📏 Área: ${l.area}</span>
-                            <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
-                            <a href="https://wa.me/573243816458?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:10px;">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
+                                <a href="https://wa.me/573243816458?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
+                            </div>
                         </div>
                     `);
                 }
             });
         }
 
-        // Función GPS
         function buscarMiUbicacion() {
             map.locate({setView: true, maxZoom: 16});
         }
         map.on('locationfound', function(e) {
-            L.circle(e.latlng, {radius: 50}).addTo(map);
+            L.circle(e.latlng, {radius: 50, color: '#d32f2f'}).addTo(map);
             L.marker(e.latlng).addTo(map).bindPopup("Estás aquí").openPopup();
         });
 
