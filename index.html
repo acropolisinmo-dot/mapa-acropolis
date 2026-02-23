@@ -21,15 +21,15 @@
         .btn-f { background: white; border: none; padding: 8px 15px; border-radius: 20px; white-space: nowrap; font-size: 11px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
         .active { background: #d32f2f !important; color: white !important; }
 
-        /* FOTOS: Ahora se ven COMPLETAS (Contain en lugar de Cover) */
-        .img-local-chica { width: 100%; height: auto; max-height: 120px; object-fit: contain; border-radius: 8px; background: #f0f0f0; }
+        /* FOTOS: Sin cortes (Contain) */
+        .img-local-chica { width: 100%; height: auto; max-height: 120px; object-fit: contain; border-radius: 8px; background: #f9f9f9; }
         
         /* SLIDER BODEGA 66 */
         .slider-container { width: 100%; height: auto; overflow-x: scroll; display: flex; scroll-snap-type: x mandatory; border-radius: 8px; scrollbar-width: none; background: #eee; }
         .slider-container::-webkit-scrollbar { display: none; }
         .slider-container img { width: 100%; height: auto; max-height: 120px; object-fit: contain; flex-shrink: 0; scroll-snap-align: start; }
 
-        /* BOTÓN GPS CIRCULAR */
+        /* GPS CIRCULAR */
         .gps-wrapper { position: absolute; bottom: 30px; right: 20px; z-index: 1000; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
         .gps-btn { width: 55px; height: 55px; background: #d32f2f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 24px; cursor: pointer; border: none; z-index: 10; }
         .circular-text { position: absolute; width: 100%; height: 100%; animation: rotateText 15s linear infinite; }
@@ -37,7 +37,6 @@
         .circular-text text { font-size: 11px; font-weight: bold; fill: #d32f2f; text-transform: uppercase; letter-spacing: 2px; }
 
         .leaflet-bottom.leaflet-left { margin-bottom: 20px; margin-left: 10px; }
-
         .popup-ficha { width: 220px; text-align: center; }
         .precio { color: #d32f2f; font-weight: 800; font-size: 17px; display: block; margin: 5px 0; }
         .grid-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; }
@@ -109,11 +108,14 @@
                     if (l.esBodega) {
                         let fotosSlider = "";
                         for(let i=1; i<=l.totalFotos; i++) {
-                            // Ruta con codificación para manejar espacios
-                            let url = baseRuta + "fotos/" + encodeURIComponent(l.carpeta) + "/" + encodeURIComponent(l.prefijo + i + ".jpg");
-                            fotosSlider += `<img src="${url}" onerror="this.src='https://via.placeholder.com/220x100?text=Imagen+No+Encontrada'">`;
+                            // Construcción de ruta compatible con GitHub (maneja espacios y extensiones)
+                            let urlBase = baseRuta + "fotos/" + encodeURIComponent(l.carpeta) + "/" + encodeURIComponent(l.prefijo + i);
+                            fotosSlider += `
+                                <img src="${urlBase}.jpg" 
+                                     onerror="this.onerror=null; this.src='${urlBase}.JPG';" 
+                                     style="width:100%; height:auto; max-height:120px; object-fit:contain; flex-shrink:0;">`;
                         }
-                        media = `<div class="slider-container">${fotosSlider}</div><small style="color:#999; font-size:9px">↔ Desliza para ver fotos</small>`;
+                        media = `<div class="slider-container">${fotosSlider}</div><small style="color:#999; font-size:9px">↔ Desliza fotos</small>`;
                     } else {
                         media = `<img src="${baseRuta + l.foto}" class="img-local-chica" onerror="this.src='https://via.placeholder.com/220x80?text=Acropolis'">`;
                     }
@@ -125,7 +127,7 @@
                             <span class="precio">$ ${l.precio}</span>
                             <span style="font-size:11px">📏 Área: ${l.area}</span>
                             <div class="grid-botones">
-                                <a href="http://google.com/maps?q=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
                                 <a href="https://wa.me/573243816458?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WA</a>
                                 <button onclick="compartir('${l.nombre}', ${l.coords[0]}, ${l.coords[1]})" class="btn-act" style="background:#6c757d; grid-column: span 2;">🔗 Compartir Propiedad</button>
                             </div>
@@ -137,7 +139,7 @@
         }
 
         function compartir(n, lat, lng) {
-            const t = `Inmueble: ${n}. Ver aquí: http://google.com/maps?q=${lat},${lng}`;
+            const t = `Inmueble: ${n}. Ver aquí: https://www.google.com/maps?q=${lat},${lng}`;
             navigator.clipboard.writeText(t).then(() => alert("Copiado al portapapeles"));
         }
 
