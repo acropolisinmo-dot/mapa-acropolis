@@ -14,20 +14,20 @@
         /* Interfaz Superior con Logo a la Derecha */
         .header-ui { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .search-container { display: flex; align-items: center; background: white; border-radius: 30px; padding: 5px 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
-        .search-bar { border: none; flex-grow: 1; outline: none; font-size: 15px; padding: 10px; }
+        .search-bar { border: none; flex-grow: 1; outline: none; font-size: 15px; padding: 10px; width: 50%; }
         .logo-top-right { height: 45px; margin-left: 10px; }
 
         .filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
         .btn-f { background: white; border: none; padding: 8px 15px; border-radius: 20px; white-space: nowrap; font-size: 11px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
         .active { background: #d32f2f !important; color: white !important; }
 
-        /* FOTOS: Tamaño reducido al 50% */
-        .img-local-chica { width: 100%; height: 75px; object-fit: cover; border-radius: 8px; }
+        /* FOTOS: Ahora se ven COMPLETAS (Contain en lugar de Cover) */
+        .img-local-chica { width: 100%; height: auto; max-height: 120px; object-fit: contain; border-radius: 8px; background: #f0f0f0; }
         
         /* SLIDER BODEGA 66 */
-        .slider-container { width: 100%; height: 100px; overflow-x: scroll; display: flex; scroll-snap-type: x mandatory; border-radius: 8px; scrollbar-width: none; background: #eee; }
+        .slider-container { width: 100%; height: auto; overflow-x: scroll; display: flex; scroll-snap-type: x mandatory; border-radius: 8px; scrollbar-width: none; background: #eee; }
         .slider-container::-webkit-scrollbar { display: none; }
-        .slider-container img { width: 100%; height: 100px; object-fit: cover; flex-shrink: 0; scroll-snap-align: start; }
+        .slider-container img { width: 100%; height: auto; max-height: 120px; object-fit: contain; flex-shrink: 0; scroll-snap-align: start; }
 
         /* BOTÓN GPS CIRCULAR */
         .gps-wrapper { position: absolute; bottom: 30px; right: 20px; z-index: 1000; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
@@ -39,7 +39,7 @@
         .leaflet-bottom.leaflet-left { margin-bottom: 20px; margin-left: 10px; }
 
         .popup-ficha { width: 220px; text-align: center; }
-        .precio { color: #d32f2f; font-weight: 800; font-size: 17px; display: block; margin: 2px 0; }
+        .precio { color: #d32f2f; font-weight: 800; font-size: 17px; display: block; margin: 5px 0; }
         .grid-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 8px; }
         .btn-act { padding: 8px; border-radius: 6px; text-decoration: none; color: white !important; font-size: 10px; font-weight: bold; text-align: center; border: none; }
     </style>
@@ -49,7 +49,7 @@
     <div class="header-ui">
         <div class="search-container">
             <span>🔍</span>
-            <input type="text" id="buscador" class="search-bar" placeholder="Buscar local, bodega o barrio..." onkeyup="filtrarMaestro()">
+            <input type="text" id="buscador" class="search-bar" placeholder="Buscar inmueble..." onkeyup="filtrarMaestro()">
             <img src="https://acropolisinmo-dot.github.io/mapa-acropolis/logo.png" class="logo-top-right">
         </div>
         <div class="filters">
@@ -77,6 +77,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
+        
         var locales = [
             { nombre: "Pueblito (Cra 12)", tipo: "local", precio: "1.700.000", area: "45 mt²", coords: [10.963471, -74.839640], foto: "pueblito.jpg" },
             { nombre: "Pueblito (Local 3)", tipo: "local", precio: "1.000.000", area: "84 mt²", coords: [10.963471, -74.839641], foto: "pueblito.jpg" },
@@ -108,19 +109,19 @@
                     if (l.esBodega) {
                         let fotosSlider = "";
                         for(let i=1; i<=l.totalFotos; i++) {
-                            // Uso de encodeURIComponent para asegurar que los espacios en "Bodega 66" funcionen
+                            // Ruta con codificación para manejar espacios
                             let url = baseRuta + "fotos/" + encodeURIComponent(l.carpeta) + "/" + encodeURIComponent(l.prefijo + i + ".jpg");
-                            fotosSlider += `<img src="${url}" onerror="this.src='https://via.placeholder.com/220x100?text=Acropolis+Bodega'">`;
+                            fotosSlider += `<img src="${url}" onerror="this.src='https://via.placeholder.com/220x100?text=Imagen+No+Encontrada'">`;
                         }
-                        media = `<div class="slider-container">${fotosSlider}</div>`;
+                        media = `<div class="slider-container">${fotosSlider}</div><small style="color:#999; font-size:9px">↔ Desliza para ver fotos</small>`;
                     } else {
-                        media = `<img src="${baseRuta + l.foto}" class="img-local-chica" onerror="this.src='https://via.placeholder.com/220x75?text=Acropolis'">`;
+                        media = `<img src="${baseRuta + l.foto}" class="img-local-chica" onerror="this.src='https://via.placeholder.com/220x80?text=Acropolis'">`;
                     }
 
                     var marker = L.marker(l.coords).bindPopup(`
                         <div class="popup-ficha">
                             ${media}
-                            <h3 style="font-size:14px; margin:4px 0">${l.nombre}</h3>
+                            <h3 style="font-size:14px; margin:8px 0 4px 0">${l.nombre}</h3>
                             <span class="precio">$ ${l.precio}</span>
                             <span style="font-size:11px">📏 Área: ${l.area}</span>
                             <div class="grid-botones">
