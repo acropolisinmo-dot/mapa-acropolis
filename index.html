@@ -88,8 +88,8 @@
                 area: "710 mt²", 
                 coords: [10.996854, -74.796166], 
                 esBodega: true, 
-                carpeta: "Bodega 66", 
-                prefijo: "bodega 66 foto ", 
+                carpeta: "bodega 66", // Cambiado a minúsculas
+                prefijo: "bodega 66 foto ", // Prefijo para archivos
                 totalFotos: 6 
             },
             { nombre: "Trupillo", tipo: "local", precio: "2.500.000", area: "59 mt²", coords: [10.9588, -74.7847], foto: "trupillo.jpg" },
@@ -108,12 +108,12 @@
                     if (l.esBodega) {
                         let fotosSlider = "";
                         for(let i=1; i<=l.totalFotos; i++) {
-                            // Construcción de ruta compatible con GitHub (maneja espacios y extensiones)
-                            let urlBase = baseRuta + "fotos/" + encodeURIComponent(l.carpeta) + "/" + encodeURIComponent(l.prefijo + i);
-                            fotosSlider += `
-                                <img src="${urlBase}.jpg" 
-                                     onerror="this.onerror=null; this.src='${urlBase}.JPG';" 
-                                     style="width:100%; height:auto; max-height:120px; object-fit:contain; flex-shrink:0;">`;
+                            // Convertimos espacios a %20 para que el navegador encuentre la ruta
+                            let folderWeb = l.carpeta.split(' ').join('%20');
+                            let fileWeb = (l.prefijo + i).split(' ').join('%20');
+                            let url = baseRuta + "fotos/" + folderWeb + "/" + fileWeb + ".jpg";
+                            
+                            fotosSlider += `<img src="${url}" onerror="this.src='https://via.placeholder.com/220x100?text=Foto+${i}+no+encontrada'">`;
                         }
                         media = `<div class="slider-container">${fotosSlider}</div><small style="color:#999; font-size:9px">↔ Desliza fotos</small>`;
                     } else {
@@ -127,7 +127,7 @@
                             <span class="precio">$ ${l.precio}</span>
                             <span style="font-size:11px">📏 Área: ${l.area}</span>
                             <div class="grid-botones">
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
+                                <a href="https://www.google.com/maps?q=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
                                 <a href="https://wa.me/573243816458?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WA</a>
                                 <button onclick="compartir('${l.nombre}', ${l.coords[0]}, ${l.coords[1]})" class="btn-act" style="background:#6c757d; grid-column: span 2;">🔗 Compartir Propiedad</button>
                             </div>
