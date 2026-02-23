@@ -5,53 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Acropolis Realty - Marketplace</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
     <style>
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
         #mi-mapa { height: 100%; width: 100%; position: absolute; top: 0; left: 0; }
         
-        /* Interfaz Superior */
         .header-ui { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
         .search-bar { background: white; padding: 12px 18px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; }
         .search-bar input { border: none; width: 100%; outline: none; font-size: 15px; margin-left: 8px; width: 100%; }
 
-        /* Logo Centrado */
         .logo-container { width: 100%; display: flex; justify-content: center; align-items: center; margin: 5px 0; }
-        .logo-acropolis { height: 85px; background: transparent; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
+        .logo-acropolis { height: 85px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
 
-        /* Filtros */
         .filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
         .btn-f { background: white; border: none; padding: 10px 18px; border-radius: 25px; white-space: nowrap; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
         .active { background: #d32f2f !important; color: white !important; }
 
-        /* SLIDER DE FOTOS (Nuevo) */
-        .slider-container { width: 100%; height: 150px; overflow-x: scroll; display: flex; scroll-snap-type: x mandatory; border-radius: 12px; scrollbar-width: none; background: #333; }
+        /* AJUSTE TAMAÑO DE FOTOS: A la mitad del anterior */
+        .img-local-unica { width: 100%; height: 65px; object-fit: cover; border-radius: 12px; }
+        
+        /* SLIDER BODEGA */
+        .slider-container { width: 100%; height: 110px; overflow-x: scroll; display: flex; scroll-snap-type: x mandatory; border-radius: 12px; scrollbar-width: none; background: #333; }
         .slider-container::-webkit-scrollbar { display: none; }
-        .slider-container img { width: 100%; height: 150px; object-fit: cover; flex-shrink: 0; scroll-snap-align: start; }
+        .slider-container img { width: 100%; height: 110px; object-fit: cover; flex-shrink: 0; scroll-snap-align: start; }
 
-        /* BOTÓN GPS CON TEXTO CIRCULAR */
-        .gps-wrapper {
-            position: absolute; bottom: 30px; right: 20px; z-index: 1000;
-            width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;
-        }
-        .gps-btn {
-            width: 55px; height: 55px; background: #d32f2f; color: white;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 24px; cursor: pointer; border: none; z-index: 10;
-        }
-        .circular-text {
-            position: absolute; width: 100%; height: 100%;
-            animation: rotateText 15s linear infinite;
-        }
+        .gps-wrapper { position: absolute; bottom: 30px; right: 20px; z-index: 1000; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
+        .gps-btn { width: 55px; height: 55px; background: #d32f2f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 24px; cursor: pointer; border: none; z-index: 10; }
+        .circular-text { position: absolute; width: 100%; height: 100%; animation: rotateText 15s linear infinite; }
         @keyframes rotateText { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .circular-text text { font-size: 11px; font-weight: bold; fill: #d32f2f; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* Zoom (Izquierda Inferior) */
         .leaflet-bottom.leaflet-left { margin-bottom: 20px; margin-left: 10px; }
 
-        /* Popups y Botones */
-        .popup-ficha { width: 250px; text-align: center; }
+        .popup-ficha { width: 230px; text-align: center; }
         .precio { color: #d32f2f; font-weight: 800; font-size: 18px; display: block; margin: 4px 0; }
-        
         .grid-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
         .btn-act { display: block; padding: 10px; border-radius: 8px; text-decoration: none; color: white !important; font-size: 11px; font-weight: bold; text-align: center; border: none; cursor: pointer; }
         .btn-full { grid-column: span 2; background: #6c757d; }
@@ -65,7 +54,7 @@
             <input type="text" id="buscador" placeholder="Buscar local, bodega o barrio..." onkeyup="filtrarMaestro()">
         </div>
         <div class="logo-container">
-            <img src="https://acropolisinmo-dot.github.io/mapa-acropolis/logo.png" class="logo-acropolis" onerror="this.style.display='none'">
+            <img src="https://acropolisinmo-dot.github.io/mapa-acropolis/logo.png" class="logo-acropolis">
         </div>
         <div class="filters">
             <button class="btn-f active" onclick="cambiarUso('todos', this)">Todos</button>
@@ -85,14 +74,15 @@
     <div id="mi-mapa"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    
     <script>
         var map = L.map('mi-mapa', { zoomControl: true }).setView([10.98, -74.80], 12);
         map.zoomControl.setPosition('bottomleft');
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         var baseRuta = "https://acropolisinmo-dot.github.io/mapa-acropolis/";
-        var baseRutaFotos = baseRuta + "fotos/";
-
+        
         var locales = [
             { nombre: "Pueblito (Cra 12)", tipo: "local", precio: "1.700.000", area: "45 mt²", coords: [10.963471, -74.839640], foto: "pueblito.jpg", slider: false },
             { nombre: "Pueblito (Local 3)", tipo: "local", precio: "1.000.000", area: "84 mt²", coords: [10.963471, -74.839641], foto: "pueblito.jpg", slider: false },
@@ -104,59 +94,59 @@
                 area: "710 mt²", 
                 coords: [10.996854, -74.796166], 
                 slider: true, 
-                carpeta: "Bodega 66", 
-                prefijo: "bodega 66 foto ", 
+                carpeta: "Bodega%2066", 
+                prefijo: "bodega%2066%20foto%20", 
                 totalFotos: 6 
             },
             { nombre: "Trupillo", tipo: "local", precio: "2.500.000", area: "59 mt²", coords: [10.9588, -74.7847], foto: "trupillo.jpg", slider: false },
             { nombre: "Juan de Acosta", tipo: "local", precio: "1.000.000", area: "30 mt²", coords: [10.828794, -75.038221], foto: "juan.jpg", slider: false }
         ];
 
-        var marcadores = L.layerGroup().addTo(map);
+        // Crear el grupo de clusters (el circulito con cantidad)
+        var marcadoresCluster = L.markerClusterGroup();
+        map.addLayer(marcadoresCluster);
 
         function filtrarMaestro() {
-            marcadores.clearLayers();
+            marcadoresCluster.clearLayers();
             var busqueda = document.getElementById('buscador').value.toLowerCase();
+            
             locales.forEach(function(l) {
                 if (l.nombre.toLowerCase().includes(busqueda)) {
-                    
                     let contenidoMedia = "";
                     
                     if (l.slider) {
-                        // Generar Slider para la Bodega
                         let fotosHTML = "";
                         for(let i=1; i<=l.totalFotos; i++) {
-                            let urlFoto = baseRutaFotos + encodeURIComponent(l.carpeta) + "/" + encodeURIComponent(l.prefijo + i + ".jpg");
-                            fotosHTML += `<img src="${urlFoto}" onerror="this.src='https://via.placeholder.com/250x150?text=Acropolis+Realty'">`;
+                            // Ruta exacta: fotos/Bodega%2066/bodega%2066%20foto%201.jpg
+                            let urlFoto = baseRuta + "fotos/" + l.carpeta + "/" + l.prefijo + i + ".jpg";
+                            fotosHTML += `<img src="${urlFoto}" onerror="this.src='https://via.placeholder.com/250x110?text=Error+Carga+Foto+${i}'">`;
                         }
-                        contenidoMedia = `<div class="slider-container">${fotosHTML}</div><small style="color:#888; font-size:10px">↔ Desliza para ver fotos</small>`;
+                        contenidoMedia = `<div class="slider-container">${fotosHTML}</div><small style="color:#888; font-size:9px">↔ Desliza fotos</small>`;
                     } else {
-                        // Imagen única para los demás
-                        contenidoMedia = `<img src="${baseRuta + l.foto}" onerror="this.src='https://via.placeholder.com/200x130?text=Acropolis'">`;
+                        contenidoMedia = `<img src="${baseRuta + l.foto}" class="img-local-unica" onerror="this.src='https://via.placeholder.com/200x65?text=Acropolis'">`;
                     }
 
-                    L.marker(l.coords).addTo(marcadores).bindPopup(`
+                    var marker = L.marker(l.coords).bindPopup(`
                         <div class="popup-ficha">
                             ${contenidoMedia}
-                            <h3>${l.nombre}</h3>
+                            <h3 style="font-size:14px; margin:5px 0">${l.nombre}</h3>
                             <span class="precio">$ ${l.precio}</span>
-                            <span style="font-size:12px">📏 Área: ${l.area}</span>
+                            <span style="font-size:11px">📏 Área: ${l.area}</span>
                             <div class="grid-botones">
                                 <a href="https://www.google.com/maps/dir/?api=1&destination=${l.coords[0]},${l.coords[1]}" target="_blank" class="btn-act" style="background:#4285F4">📍 Ruta</a>
                                 <a href="https://wa.me/573243816458?text=Info sobre ${l.nombre}" target="_blank" class="btn-act" style="background:#25d366">💬 WhatsApp</a>
-                                <button onclick="compartir('${l.nombre}', ${l.coords[0]}, ${l.coords[1]})" class="btn-act btn-full">🔗 Compartir Propiedad</button>
+                                <button onclick="compartir('${l.nombre}', ${l.coords[0]}, ${l.coords[1]})" class="btn-act btn-full">🔗 Compartir</button>
                             </div>
                         </div>
                     `);
+                    marcadoresCluster.addLayer(marker);
                 }
             });
         }
 
         function compartir(nombre, lat, lng) {
-            const texto = `Mira este inmueble en Acropolis Realty: ${nombre}. Ubicación: https://www.google.com/maps?q=${lat},${lng}`;
-            navigator.clipboard.writeText(texto).then(() => {
-                alert("¡Enlace copiado! Ya puedes pegarlo en WhatsApp o redes sociales.");
-            });
+            const texto = `Mira este inmueble en Acropolis Realty: ${nombre}. Ubicación: http://maps.google.com/?q=${lat},${lng}`;
+            navigator.clipboard.writeText(texto).then(() => { alert("¡Enlace copiado!"); });
         }
 
         function buscarMiUbicacion() { map.locate({setView: true, maxZoom: 16}); }
