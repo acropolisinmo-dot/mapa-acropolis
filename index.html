@@ -16,21 +16,21 @@
         .search-bar { background: white; padding: 12px 18px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; align-items: center; }
         .search-bar input { border: none; width: 100%; outline: none; font-size: 15px; margin-left: 8px; width: 100%; }
 
-        /* Contenedor Intermedio: Logo Centrado */
+        /* Logo Centrado */
         .logo-container { width: 100%; display: flex; justify-content: center; align-items: center; margin: 2px 0; }
         .logo-acropolis { height: 65px; background: transparent; border: none; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2)); }
 
-        /* Fila de Filtros */
-        .filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; }
+        /* Filtros */
+        .filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
         .filters::-webkit-scrollbar { display: none; }
         .btn-f { background: white; border: none; padding: 10px 18px; border-radius: 25px; white-space: nowrap; font-size: 12px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; }
         .active { background: #d32f2f !important; color: white !important; }
 
-        /* Botón GPS y Zoom */
-        .gps-btn { position: absolute; bottom: 90px; right: 12px; z-index: 1000; background: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 22px; cursor: pointer; border: none; }
+        /* Botón GPS (Derecha Inferior) */
+        .gps-btn { position: absolute; bottom: 30px; right: 20px; z-index: 1000; background: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 24px; cursor: pointer; border: none; }
         
-        /* Ajuste de posición del control de Zoom de Leaflet */
-        .leaflet-bottom.leaflet-right { margin-bottom: 20px; margin-right: 5px; }
+        /* Ajuste de Zoom (Izquierda Inferior) */
+        .leaflet-bottom.leaflet-left { margin-bottom: 20px; margin-left: 10px; }
 
         /* Popups */
         .popup-ficha { width: 230px; text-align: center; }
@@ -64,11 +64,9 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Zoom activado con zoomControl: true
+        // Zoom activado y posicionado a la izquierda inferior
         var map = L.map('mi-mapa', { zoomControl: true }).setView([10.98, -74.80], 12);
-        
-        // Mover el control de zoom a la derecha abajo
-        map.zoomControl.setPosition('bottomright');
+        map.zoomControl.setPosition('bottomleft');
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
